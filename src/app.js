@@ -105,6 +105,10 @@ const commands = {
 
 
 (async () => {
+  if(parseInt(process.versions.node.split(".")[0], 10) < 16) {
+    console.error('You are using a node version earlier than 16, please update it and retry');
+    return;
+  }
   cliMd = (await import('cli-markdown')).default;
   const api = await getClient();
   const args = process.argv.slice(4);
