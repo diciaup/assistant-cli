@@ -3,6 +3,8 @@ const spawn = require("spawno"),
     electronPath = require("electron");
 const fs = require('fs');
 const Spinner = require('cli-spinner').Spinner;
+const readline = require('readline');
+
 
 const loadingSpinner = new Spinner('processing... %s');
 loadingSpinner.setSpinnerString('|/-\\');
@@ -32,17 +34,17 @@ const getToken = () => {
   const childProcess = execElectron(`${__dirname}/fetch-token.js`);
   return new Promise((resolve, reject) => {
     childProcess.stdout.on('data', (message) => {
-      try{
+      try {
         const token = JSON.parse(message).token;
         if(token) {
           fs.writeFileSync(localStorageLocation, token);
           resolve(token);
         }
-      }catch(e) {
+      } catch(e) {
         reject(e);
       }
     })
-});
+  });
 }
 
 const getClient = async () => {
@@ -66,11 +68,32 @@ const getClient = async () => {
   return api;
 }
 
+const openChat = () => {
+  const interface = readline.createInterface(
+     process.stdin, process.stdout);    
+};
+
+
+const commands = {
+  'open chat': openChat,
+  'start conversation': openChat,
+  'start chat': openChat,
+  'chat': openChat
+};
+
+
 (async () => {
   const cliMd = (await import('cli-markdown')).default;
   loadingSpinner.start();
   const api = await getClient();
-  const response = await api.sendMessage(process.argv.slice(3).join(' '));
-  loadingSpinner.stop(true);
-  console.log(cliMd(response));
+  const args = process.argv.slice(3);
+  const def = commands[args.join(' ')];
+  console.log(args.join(' '));
+  if(def) {
+    def();
+  }else {
+    const response = await api.sendMessage(args.join(' '));
+    loadingSpinner.stop(true);
+    console.log(cliMd(response));
+  }
 })().catch((err) => console.log(err));
