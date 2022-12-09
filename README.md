@@ -23,7 +23,18 @@ npm install -g assistant-cli
 > **Note**
 > Per the official OpenAI Discord on December 7th, 2022: The ChatGPT servers are currently experiencing "exceptionally high demand," so some requests may respond with [HTTP 503 errors](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503).
 
+### One spot question:
 ```bash
-    assistant what is the meaning of universe?
+assistant Provide me a React snippet
 ```
+
+### Continuous conversation feature
+
+You can open a chat typing:
+```bash
+assistant chat
+```
+<p align="center">
+  <img src="/media/assistant-chat.png" />
+</p>
 
