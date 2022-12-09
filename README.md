@@ -14,5 +14,5 @@ This is a Command line tools that permits people to integrate easily with the [C
 ## Install
 
 ```bash
-npm install -g chatgpt-cli
+npm install -g assistant-cli
 ```
