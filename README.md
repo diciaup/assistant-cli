@@ -2,12 +2,11 @@
 
 > CLI tool for [ChatGPT](https://openai.com/blog/chatgpt/) Service.
 
-[![NPM](https://img.shields.io/npm/v/assistant-cli.svg)] [![MIT License](https://img.shields.io/badge/license-MIT-blue)]
+![NPM](https://img.shields.io/npm/v/assistant-cli.svg) ![MIT License](https://img.shields.io/badge/license-MIT-blue)
 
 - [Intro](#intro)
 - [Install](#install)
 - [Usage](#usage)
-- [License](#license)
 
 ## Intro
 
