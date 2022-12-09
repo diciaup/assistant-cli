@@ -72,9 +72,9 @@ const getClient = async () => {
 }
 
 const useConversation = (conversationApi, rl, answer = "Hello how can i help you?") => {
-  rl.question(`${cliMd('🤖 ' + answer)}\n\r> `, (request) => {
-    loadingSpinner.start();
+  rl.question(`${cliMd('🤖 ' + answer)}> `, (request) => {
     if(request.length > 0) {
+       loadingSpinner.start();
        conversationApi.sendMessage(request).then(res => {
         useConversation(conversationApi, rl, res);
       })
