@@ -3,7 +3,9 @@ const spawn = require("spawno"),
     electronPath = require("electron");
 const fs = require('fs');
 const Spinner = require('cli-spinner').Spinner;
+const prompt = require("prompt-sync")({ sigint: true });
 const readline = require('readline');
+let cliMd;
 
 
 const loadingSpinner = new Spinner('processing... %s');
@@ -47,6 +49,7 @@ const getToken = () => {
   });
 }
 
+
 const getClient = async () => {
   const {ChatGPTAPI} = await import('chatgpt');
   let token;
@@ -61,6 +64,7 @@ const getClient = async () => {
     sessionToken: token
   });
   const authenticated = await api.getIsAuthenticated();
+  console.log(authenticated, token);
   if (!authenticated) {
     token = await getToken();
     return getClient();
@@ -68,30 +72,48 @@ const getClient = async () => {
   return api;
 }
 
-const openChat = () => {
-  const interface = readline.createInterface(
-     process.stdin, process.stdout);    
-};
+const useConversation = (conversationApi, rl, answer = "Hello how can i help you?") => {
+  rl.question(`${cliMd('🤖 ' + answer)}\n\r> `, (request) => {
+    loadingSpinner.start();
+    if(request.length > 0) {
+       conversationApi.sendMessage(request).then(res => {
+        useConversation(conversationApi, rl, res);
+      })
+      .catch(e => useConversation(conversationApi, rl, e))
+      .finally(() => loadingSpinner.stop(true));   
+    }else {
+      useConversation(conversationApi, rl, 'Please write a message');
+    }
+  })
+  };
+
+const startConversation = (conversationApi) => {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  useConversation(conversationApi, rl);
+}
 
 
 const commands = {
-  'open chat': openChat,
-  'start conversation': openChat,
-  'start chat': openChat,
-  'chat': openChat
+  'open chat': startConversation,
+  'start conversation': startConversation,
+  'start chat': startConversation,
+  'chat': startConversation
 };
 
 
 (async () => {
-  const cliMd = (await import('cli-markdown')).default;
-  loadingSpinner.start();
+  cliMd = (await import('cli-markdown')).default;
   const api = await getClient();
-  const args = process.argv.slice(3);
+  const args = process.argv.slice(4);
   const def = commands[args.join(' ')];
-  console.log(args.join(' '));
   if(def) {
-    def();
+    def(api.getConversation());
   }else {
+    loadingSpinner.start();
     const response = await api.sendMessage(args.join(' '));
     loadingSpinner.stop(true);
     console.log(cliMd(response));
