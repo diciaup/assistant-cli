@@ -3,7 +3,6 @@ const spawn = require("spawno"),
     electronPath = require("electron");
 const fs = require('fs');
 const Spinner = require('cli-spinner').Spinner;
-process.env.NODE_NO_WARNINGS = 0
 
 const loadingSpinner = new Spinner('processing... %s');
 loadingSpinner.setSpinnerString('|/-\\');
@@ -26,12 +25,11 @@ function execElectron(path, options, callback) {
   var cwd = options.cwd || process && process.cwd() || __dirname;
   delete options.cwd;
 
-  return spawn(electronPath, oArgv(options), { cwd: cwd, silent: true }, callback);
+  return spawn(electronPath, oArgv(options), { cwd: cwd, _showOutput: process.env.ENV === 'dev'}, callback);
 };
 
 const getToken = () => {
   const childProcess = execElectron(`${__dirname}/fetch-token.js`);
-
   return new Promise((resolve, reject) => {
     childProcess.stdout.on('data', (message) => {
       try{

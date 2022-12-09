@@ -9,15 +9,14 @@ const getSessionToken = async () => {
             const token = cookies.filter((cookie) => cookie.name === '__Secure-next-auth.session-token')[0].value;
             if(token) {
                 process.stdout.write(JSON.stringify({token}));
-                win.close();
-                app.exit();
+                if(process.env.ENV !== 'dev') {
+                    win.close();
+                    app.exit();
+                }
             }
         } catch(e) {
             console.error(e);
         }
     });
-}
-if(app.isReady()) {
-    getSessionToken();
 }
 app.on('ready', getSessionToken);
