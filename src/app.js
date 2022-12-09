@@ -72,7 +72,7 @@ const getClient = async () => {
   const cliMd = (await import('cli-markdown')).default;
   loadingSpinner.start();
   const api = await getClient();
-  const response = await api.sendMessage(process.argv.slice(1).join(' '));
+  const response = await api.sendMessage(process.argv.slice(3).join(' '));
   loadingSpinner.stop(true);
   console.log(cliMd(response));
 })().catch((err) => console.log(err));

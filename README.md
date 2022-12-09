@@ -1,11 +1,10 @@
-# ChatGPT CLI <!-- omit in toc -->
+# Assistant CLI <!-- omit in toc -->
 
 > CLI tool for [ChatGPT](https://openai.com/blog/chatgpt/) Service.
 
 - [Intro](#intro)
 - [Install](#install)
 - [Usage](#usage)
-- [Credits](#credits)
 - [License](#license)
 
 ## Intro
