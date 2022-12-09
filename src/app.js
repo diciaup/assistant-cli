@@ -64,7 +64,6 @@ const getClient = async () => {
     sessionToken: token
   });
   const authenticated = await api.getIsAuthenticated();
-  console.log(authenticated, token);
   if (!authenticated) {
     token = await getToken();
     return getClient();
