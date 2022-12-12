@@ -15,7 +15,7 @@
   "author": "Paolo Di Ciaula",
   "license": "MIT",
   "dependencies": {
-    "chatgpt": "^2.0.5",
+    "chatgpt": "^2.1.1",
     "cli-markdown": "^3.0.2",
     "cli-spinner": "^0.2.10",
     "electron": "^22.0.0",
