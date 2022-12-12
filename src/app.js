@@ -100,16 +100,20 @@ const startConversation = (conversationApi) => {
 const resetAuth = async () => {
   fs.rmSync(localStorageLocation);
   await getToken(true);
+  console.log('Cache cleaned!');
 }
-
 
 const commands = {
   'open chat': startConversation,
   'start conversation': startConversation,
   'start chat': startConversation,
+  'chat': startConversation
+};
+
+const unnecessaryClientCommand = {
   'reset auth': resetAuth,
   'clear session': resetAuth,
-  'chat': startConversation
+  'clean': resetAuth
 };
 
 
@@ -119,8 +123,13 @@ const commands = {
     return;
   }
   cliMd = (await import('cli-markdown')).default;
-  const api = await getClient();
   const args = process.argv.slice(4);
+  const noClientDef = unnecessaryClientCommand[args.join(' ')];
+  if(noClientDef) {
+    noClientDef();
+    return;
+  }
+  const api = await getClient();
   const def = commands[args.join(' ')];
   if(def) {
     def(api.getConversation());
