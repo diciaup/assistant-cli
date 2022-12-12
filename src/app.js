@@ -32,6 +32,7 @@ function execElectron(path, options, callback, clearCache = false) {
   return spawn(electronPath, oArgv(options), { cwd: cwd, env: {CLEAR_CACHE: clearCache}, _showOutput: process.env.ENV === 'dev'}, callback);
 }
 
+let authTry = 0;
 const getToken = (clearCache) => {
   const childProcess = execElectron(`${__dirname}/fetch-token.js`, undefined, undefined, clearCache);
   return new Promise((resolve, reject) => {
@@ -50,7 +51,6 @@ const getToken = (clearCache) => {
   });
 }
 
-
 const getClient = async () => {
   const {ChatGPTAPI} = await import('chatgpt');
   let tokens;
@@ -68,6 +68,10 @@ const getClient = async () => {
   const authenticated = await api.getIsAuthenticated();
   if (!authenticated) {
     tokens = await getToken(false);
+    authTry++;
+    if(authTry === 3) {
+      throw new Error("Authentication error, there is an error integrating with ChatGPT Service");
+    }
     return getClient();
   }
   return api;
@@ -118,8 +122,8 @@ const unnecessaryClientCommand = {
 
 
 (async () => {
-  if(parseInt(process.versions.node.split(".")[0], 10) < 16) {
-    console.error('You are using a node version earlier than 16, please update it and retry');
+  if(parseInt(process.versions.node.split(".")[0], 10) < 18) {
+    console.error('You are using a node version earlier than 18, please update it and retry');
     return;
   }
   cliMd = (await import('cli-markdown')).default;

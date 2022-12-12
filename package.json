@@ -1,10 +1,10 @@
 {
   "name": "assistant-cli",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "A command line tool to easily integrate OpenAI Chat GPT service",
   "main": "./bin/cli.js",
   "engines": {
-    "node": ">=16.8"
+    "node": ">=18"
   },
   "bin": {
     "assistant": "./bin/cli.js"
@@ -15,7 +15,7 @@
   "author": "Paolo Di Ciaula",
   "license": "MIT",
   "dependencies": {
-    "chatgpt": "^2.1.1",
+    "chatgpt": "2.1.1",
     "cli-markdown": "^3.0.2",
     "cli-spinner": "^0.2.10",
     "electron": "^22.0.0",
