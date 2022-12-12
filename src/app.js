@@ -108,6 +108,7 @@ const commands = {
   'start conversation': startConversation,
   'start chat': startConversation,
   'reset auth': resetAuth,
+  'clear session': resetAuth,
   'chat': startConversation
 };
 
