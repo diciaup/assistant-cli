@@ -3,7 +3,6 @@ const spawn = require("spawno"),
     electronPath = require("electron");
 const fs = require('fs');
 const Spinner = require('cli-spinner').Spinner;
-const prompt = require("prompt-sync")({ sigint: true });
 const readline = require('readline');
 let cliMd;
 
