@@ -1,6 +1,6 @@
 {
   "name": "assistant-cli",
-  "version": "1.2.2",
+  "version": "1.2.21",
   "description": "A command line tool to easily integrate OpenAI Chat GPT service",
   "main": "./bin/cli",
   "engines": {
