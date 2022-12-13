@@ -8,18 +8,16 @@ const getSessionToken = async () => {
         await win.webContents.session.clearStorageData({origin: 'https://chat.openai.com'});
         await win.webContents.session.clearAuthCache();
         win.close();
-        app.exit();
     }
     win.webContents.on('did-finish-load', async () => {
         const cookies = await win.webContents.session.cookies.get({});
         try {
             const token = cookies.filter((cookie) => cookie.name === '__Secure-next-auth.session-token')[0].value;
             const clearanceToken = cookies.filter((cookie) => cookie.name === 'cf_clearance')[0].value;
-            if(token) {
+            if(token && clearanceToken) {
                 process.stdout.write(JSON.stringify({token, clearanceToken}));
                 if(process.env.ENV !== 'dev') {
                     win.close();
-                    app.exit();
                 }
             }
         } catch(e) {
@@ -27,4 +25,9 @@ const getSessionToken = async () => {
         }
     });
 }
+
 app.on('ready', getSessionToken);
+
+app.on('window-all-closed', () => {
+  app.quit()
+})

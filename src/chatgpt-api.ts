@@ -4,7 +4,6 @@ import * as types from './types';
 
 import { ChatGPTConversation } from './chatgpt-conversation'
 import {Axios, AxiosResponse} from "axios";
-import {markdownToText} from "chatgpt";
 
 const KEY_ACCESS_TOKEN = 'accessToken'
 const USER_AGENT =
@@ -154,29 +153,29 @@ export class ChatGPTAPI {
             url: '/conversation',
             method: 'POST',
             headers,
-            data: body
+            data: JSON.stringify(body)
         }).then(res => {
-            if (res.data === '[DONE]') {
-                return response;
-            }
-
             try {
-                const parsedData: types.ConversationResponseEvent = JSON.parse(res.data)
+                let index = -2;
+                let parsedData: types.ConversationResponseEvent;
+                const parse = () => {
+                    try {
+                        parsedData = JSON.parse(res.data.split('data: ').slice(index)[0]);
+                    } catch(e) {
+                        index--;
+                        parse();
+                    }
+                }
+                parse();
                 if (onConversationResponse) {
                     onConversationResponse(parsedData)
                 }
 
                 const message = parsedData.message
-                // console.log('event', JSON.stringify(parsedData, null, 2))
-
                 if (message) {
                     let text = message?.content?.parts?.[0]
 
                     if (text) {
-                        if (!this._markdown) {
-                            text = markdownToText(text)
-                        }
-
                         response = text
 
                         if (onProgress) {
@@ -184,8 +183,9 @@ export class ChatGPTAPI {
                         }
                     }
                 }
+                return response;
             } catch (err) {
-                console.warn('fetchSSE onMessage unexpected error', err)
+                console.warn('error parsing message', res.data, err);
                 throw (err);
             }
         }).catch((err) => {
@@ -212,7 +212,7 @@ export class ChatGPTAPI {
 
     async getIsAuthenticated() {
         try {
-            void (await this.refreshAccessToken())
+            await this.refreshAccessToken();
             return true
         } catch (err) {
             return false
@@ -242,14 +242,14 @@ export class ChatGPTAPI {
                 console.log('GET', url, headers)
             }
 
-            const res = (await this.apiClient.request({
+            const res = JSON.parse((await this.apiClient.request({
                 url,
                 method: 'get',
                 headers
-            })).data;
+            })).data);
 
             const accessToken = res?.accessToken
-
+            
             if (!accessToken) {
                 throw new types.ChatGPTError('Unauthorized');
             }
@@ -286,3 +286,5 @@ export class ChatGPTAPI {
         return new ChatGPTConversation(this, opts)
     }
 }
+
+

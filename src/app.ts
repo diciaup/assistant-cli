@@ -1,10 +1,10 @@
-const spawn = require("spawno"),
-    oArgv = require("oargv"),
-    electronPath = require("electron");
+import { ChatGPTAPI } from './chatgpt-api';
+const { execSync } = require('child_process');
+const electronPath = require("electron");
 const fs = require('fs');
 const Spinner = require('cli-spinner').Spinner;
 const readline = require('readline');
-let cliMd;
+const cliMd = require('cli-md')
 
 
 const loadingSpinner = new Spinner('processing... %s');
@@ -27,46 +27,45 @@ function execElectron(path, options, callback, clearCache = false) {
 
   var cwd = options.cwd || process && process.cwd() || __dirname;
   delete options.cwd;
-
-  return spawn(electronPath, oArgv(options), { cwd: cwd, env: {CLEAR_CACHE: clearCache}, _showOutput: process.env.ENV === 'dev'}, callback);
+  console.log(electronPath);
+  return ;
 }
 
 let authTry = 0;
 const getToken = (clearCache) => {
-  const childProcess = execElectron(`${__dirname}/fetch-token.js`, undefined, undefined, clearCache);
-  return new Promise((resolve, reject) => {
-    childProcess.stdout.on('data', (message) => {
-      try {
+  const path = `${__dirname}/fetch-token.js`;
+  const message = execSync(`${electronPath} ${path}`, {env: {...process.env, ...{CLEAR_CACHE: clearCache}}});
+  if(message.length > 0) {
+    try {
         const token = JSON.parse(message.toString());
         if(token) {
           fs.writeFileSync(localStorageLocation, message);
-          resolve(token);
+          return token;
         }
       } catch(e) {
         console.log('original message', message.toString());
-        reject(e);
+        throw e;
       }
-    })
-  });
+  }
 }
 
 const getClient = async () => {
-  const {ChatGPTAPI} = await import('chatgpt');
   let tokens;
   try {
     tokens = JSON.parse(fs.readFileSync(localStorageLocation).toString());
   } catch(e) {}
   if(!tokens) {
-    tokens = await getToken(false);
+    tokens = getToken(false);
   }
   const api = new ChatGPTAPI({
     sessionToken: tokens.token,
     clearanceToken: tokens.clearanceToken,
+    debug: process.env.ENV === 'dev',
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
   });
   const authenticated = await api.getIsAuthenticated();
   if (!authenticated) {
-    tokens = await getToken(false);
+    tokens = getToken(false);
     authTry++;
     if(authTry === 3) {
       throw new Error("Authentication error, there is an error integrating with ChatGPT Service");
@@ -100,9 +99,11 @@ const startConversation = (conversationApi) => {
   useConversation(conversationApi, rl);
 }
 
-const resetAuth = async () => {
-  fs.rmSync(localStorageLocation);
-  await getToken(true);
+const resetAuth = () => {
+  getToken(true);
+  if(fs.existsSync(localStorageLocation)) {
+    fs.rmSync(localStorageLocation);
+  }
   console.log('Cache cleaned!');
 }
 
@@ -121,11 +122,10 @@ const unnecessaryClientCommand = {
 
 
 (async () => {
-  if(parseInt(process.versions.node.split(".")[0], 10) < 18) {
-    console.error('You are using a node version earlier than 18, please update it and retry');
+  if(parseInt(process.versions.node.split(".")[0], 10) < 16) {
+    console.error('You are using a node version earlier than 16, please update it and retry');
     return;
   }
-  cliMd = (await import('cli-markdown')).default;
   const args = process.argv.slice(4);
   const noClientDef = unnecessaryClientCommand[args.join(' ')];
   if(noClientDef) {
