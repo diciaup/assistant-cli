@@ -1,13 +1,13 @@
 {
   "name": "assistant-cli",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A command line tool to easily integrate OpenAI Chat GPT service",
   "main": "dist/bin/cli.js",
   "engines": {
     "node": ">=16"
   },
   "bin": {
-    "assistant": "./dist/bin/cli.js"
+    "assistant": "./bin/cli.js"
   },
   "scripts": {
     "publish": "tsc && npm publish",
