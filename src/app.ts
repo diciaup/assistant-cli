@@ -11,26 +11,6 @@ const loadingSpinner = new Spinner('processing... %s');
 loadingSpinner.setSpinnerString('|/-\\');
 const localStorageLocation = `${__dirname}/../localStorage`;
 
-function execElectron(path, options, callback, clearCache = false) {
-
-  if (!path) {
-      return callback(new Error("The path argument is mandatory."));
-  }
-
-  if (typeof options === "function") {
-      callback = options;
-      options = null;
-  }
-
-  options = options || {};
-  options._ = [path];
-
-  var cwd = options.cwd || process && process.cwd() || __dirname;
-  delete options.cwd;
-  console.log(electronPath);
-  return ;
-}
-
 let authTry = 0;
 const getToken = (clearCache) => {
   const path = `${__dirname}/fetch-token.js`;

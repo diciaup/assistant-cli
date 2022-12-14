@@ -21,8 +21,6 @@ export class ChatGPTAPI {
     protected _user: types.User | null = null
     protected apiClient: Axios;
     protected backendClient: Axios;
-
-    // Stores access tokens for `accessTokenTTL` milliseconds before needing to refresh
     protected _accessTokenCache: ExpiryMap<string, string>
 
     constructor(opts: {
