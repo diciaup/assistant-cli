@@ -2,6 +2,11 @@ import {ChatGPTAPI} from "./chatgpt-api";
 
 const { app, BrowserWindow } = require('electron');
 
+app.disableHardwareAcceleration();
+app.commandLine.appendSwitch("disable-software-rasterizer");
+app.commandLine.appendSwitch('disable-gpu');
+
+
 const getSessionToken = async () => {
     const win = new BrowserWindow({width: 799, height: 600});
     win.loadURL('https://chat.openai.com/chat', {userAgent: 'Chrome'});

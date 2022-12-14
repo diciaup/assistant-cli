@@ -14,8 +14,8 @@ const localStorageLocation = `${__dirname}/../localStorage`;
 let authTry = 0;
 const getToken = (clearCache) => {
   const path = `${__dirname}/fetch-token.js`;
-  const message = execSync(`${electronPath} ${path}`, {env: {...process.env, ...{CLEAR_CACHE: clearCache}}}).toString().split('data: ');
-  if(message.length > 0) {
+  const message = execSync(`${electronPath} --no-logging ${path}`, {stdio: [], env: {...process.env, ...{CLEAR_CACHE: clearCache, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
+  if(message.length > 1) {
     try {
         const token = JSON.parse(message[1]);
         if(token) {
@@ -34,8 +34,9 @@ const getClient = async () => {
   try {
     tokens = JSON.parse(fs.readFileSync(localStorageLocation).toString());
   } catch(e) {}
-  if(!tokens) {
+  if(!(tokens && tokens.token && tokens.clearanceToken)) {
     tokens = getToken(false);
+    return getClient();
   }
   const api = new ChatGPTAPI({
     sessionToken: tokens.token,
@@ -53,6 +54,7 @@ const getClient = async () => {
     return getClient();
   }
   return api;
+  
 }
 
 const useConversation = (conversationApi, rl, answer = "Hello how can i help you?") => {
