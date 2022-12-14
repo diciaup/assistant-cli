@@ -159,8 +159,10 @@ export class ChatGPTAPI {
                     try {
                         parsedData = JSON.parse(res.data.split('data: ').slice(index)[0]);
                     } catch(e) {
-                        index--;
-                        parse();
+                        if(Math.abs(index) < res.data.length) {
+                            index--;
+                            parse();
+                        }
                     }
                 }
                 parse();
