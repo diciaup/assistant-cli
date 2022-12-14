@@ -1,6 +1,6 @@
 {
   "name": "assistant-cli",
-  "version": "1.2.1",
+  "version": "1.2.3",
   "description": "A command line tool to easily integrate OpenAI Chat GPT service",
   "main": "dist/bin/cli.js",
   "engines": {
@@ -11,7 +11,8 @@
   },
   "scripts": {
     "publish": "tsc && npm publish",
-    "start": "tsc && ENV=dev node .",
+    "start": "node .",
+    "build": "tsc",
     "get-token": "tsc && ENV=dev electron ./dist/src/fetch-token.js"
   },
   "author": "Paolo Di Ciaula",

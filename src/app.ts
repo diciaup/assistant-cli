@@ -34,12 +34,12 @@ function execElectron(path, options, callback, clearCache = false) {
 let authTry = 0;
 const getToken = (clearCache) => {
   const path = `${__dirname}/fetch-token.js`;
-  const message = execSync(`${electronPath} ${path}`, {env: {...process.env, ...{CLEAR_CACHE: clearCache}}});
+  const message = execSync(`${electronPath} ${path}`, {env: {...process.env, ...{CLEAR_CACHE: clearCache}}}).toString().split('data: ');
   if(message.length > 0) {
     try {
-        const token = JSON.parse(message.toString());
+        const token = JSON.parse(message[1]);
         if(token) {
-          fs.writeFileSync(localStorageLocation, message);
+          fs.writeFileSync(localStorageLocation, JSON.stringify(token));
           return token;
         }
       } catch(e) {
@@ -61,7 +61,7 @@ const getClient = async () => {
     sessionToken: tokens.token,
     clearanceToken: tokens.clearanceToken,
     debug: process.env.ENV === 'dev',
-    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+    userAgent: 'Chrome'
   });
   const authenticated = await api.getIsAuthenticated();
   if (!authenticated) {

@@ -6,8 +6,7 @@ import { ChatGPTConversation } from './chatgpt-conversation'
 import {Axios, AxiosResponse} from "axios";
 
 const KEY_ACCESS_TOKEN = 'accessToken'
-const USER_AGENT =
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36'
+const USER_AGENT = 'Chrome'
 
 
 export class ChatGPTAPI {
@@ -249,7 +248,7 @@ export class ChatGPTAPI {
             })).data);
 
             const accessToken = res?.accessToken
-            
+
             if (!accessToken) {
                 throw new types.ChatGPTError('Unauthorized');
             }
