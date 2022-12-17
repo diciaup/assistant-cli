@@ -3,11 +3,16 @@ import { v4 as uuidv4 } from 'uuid'
 import * as types from './types';
 
 import { ChatGPTConversation } from './chatgpt-conversation'
-import {Axios, AxiosResponse} from "axios";
+import {Axios, AxiosRequestConfig, AxiosResponse} from "axios";
 
 const KEY_ACCESS_TOKEN = 'accessToken'
 const USER_AGENT = 'Chrome'
 
+
+interface RefreshAccessTokenResponse {
+    type: 'code' | 'page',
+    content: any
+}
 
 export class ChatGPTAPI {
     protected _sessionToken: string
@@ -91,6 +96,10 @@ export class ChatGPTAPI {
 
     get sessionToken() {
         return this._sessionToken
+    }
+
+    set accessToken(accessToken: string) {
+        this._accessTokenCache.set(KEY_ACCESS_TOKEN, accessToken);
     }
 
     get clearanceToken() {
@@ -209,23 +218,18 @@ export class ChatGPTAPI {
     async messageReturnHandler(data: any) {
     }
 
-    async getIsAuthenticated() {
-        try {
-            await this.refreshAccessToken();
-            return true
-        } catch (err) {
-            return false
-        }
+    async getIsAuthenticated(): Promise<RefreshAccessTokenResponse> {
+        return this.refreshAccessToken();
     }
 
     async ensureAuth() {
         return await this.refreshAccessToken()
     }
 
-    async refreshAccessToken(): Promise<string> {
+    async refreshAccessToken(): Promise<RefreshAccessTokenResponse> {
         const cachedAccessToken = this._accessTokenCache.get(KEY_ACCESS_TOKEN)
         if (cachedAccessToken) {
-            return cachedAccessToken
+            return {type: 'code', content: cachedAccessToken}
         }
 
         let response: AxiosResponse;
@@ -240,13 +244,20 @@ export class ChatGPTAPI {
             if (this._debug) {
                 console.log('GET', url, headers)
             }
-
-            const res = JSON.parse((await this.apiClient.request({
+            const sessionResParams: AxiosRequestConfig = {
                 url,
                 method: 'get',
                 headers
-            })).data);
-
+            }
+            const sessionRes = await this.apiClient.request(sessionResParams);
+            if(sessionRes.data.startsWith('<')) {
+                sessionResParams.url = this.apiClient.defaults.baseURL + sessionResParams.url;
+                return {
+                    type: 'page',
+                    content: sessionResParams
+                };
+            }
+            const res = JSON.parse(sessionRes.data);
             const accessToken = res?.accessToken
 
             if (!accessToken) {

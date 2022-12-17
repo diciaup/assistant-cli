@@ -13,7 +13,7 @@
     "publish": "tsc && npm publish",
     "start": "node .",
     "build": "tsc",
-    "get-token": "tsc && ENV=dev electron ./dist/src/fetch-token.js"
+    "get-token": "tsc && ENV=dev electron ./dist/fetch-token.js"
   },
   "author": "Paolo Di Ciaula",
   "license": "MIT",
