@@ -14,7 +14,7 @@ const localStorageLocation = `${__dirname}/../localStorage`;
 let authTry = 0;
 const getToken = (clearCache) => {
   const path = `${__dirname}/fetch-token.js`;
-  const message = execSync(`${electronPath} --no-logging ${path}`, {stdio: [], env: {...process.env, ...{CLEAR_CACHE: clearCache, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
+  const message = execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{CLEAR_CACHE: clearCache, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
   if(message.length > 1) {
     try {
         const token = JSON.parse(message[1]);
@@ -45,16 +45,17 @@ const getClient = async () => {
     userAgent: 'Chrome'
   });
   const authenticated = await api.getIsAuthenticated();
-  if (!authenticated) {
+  console.log('auth', authenticated);
+  /*if (authenticated.type !== 'code') {
     tokens = getToken(false);
     authTry++;
     if(authTry === 3) {
       throw new Error("Authentication error, there is an error integrating with ChatGPT Service");
     }
     return getClient();
-  }
+  }*/
   return api;
-  
+
 }
 
 const useConversation = (conversationApi, rl, answer = "Hello how can i help you?") => {
