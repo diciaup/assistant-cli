@@ -20,12 +20,21 @@ export class ChatGPTConversation {
         opts: types.SendConversationMessageOptions = {}
     ): Promise<string> {
         const { onConversationResponse, ...rest } = opts
-
+        const allConversations = await this.api.getConversations();
+        const conversations = allConversations.filter(item => item.title === 'CLI');
+        if(conversations.length === 0) {
+            await this.api.changeConversationName(allConversations[0].id, 'CLI');
+            return this.sendMessage(message, opts);
+        }
+        const conversationId = conversations[0].id;
         return this.api.sendMessage(message, {
             ...rest,
-            conversationId: this.conversationId,
+            conversationId,
             parentMessageId: this.parentMessageId,
-            onConversationResponse: (response) => {
+            onConversationResponse: (response: any) => {
+                if(response.detail) {
+                    console.log('\n' + response.detail);
+                }
                 if (response.conversation_id) {
                     this.conversationId = response.conversation_id
                 }
