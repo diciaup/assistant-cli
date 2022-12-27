@@ -11,7 +11,7 @@ const routes = {
 };
 
 
-app.on('ready', routes[process.env.route]);
+app.on('ready', routes[process.env.ROUTE]);
 
 app.on('window-all-closed', () => {
     app.quit()

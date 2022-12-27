@@ -23,17 +23,18 @@ export class ChatGPTConversation {
         const allConversations = await this.api.getConversations();
         const conversations = allConversations.filter(item => item.title === 'CLI');
         if(conversations.length === 0) {
-            await this.api.changeConversationName(allConversations[0].id, 'CLI');
-            return this.sendMessage(message, opts);
+            if(allConversations.length > 0) {
+                await this.api.changeConversationName(allConversations[0].id, 'CLI');
+            }
         }
-        const conversationId = conversations[0].id;
+        const conversationId = conversations.length > 0 ? conversations[0].id : undefined;
         return this.api.sendMessage(message, {
             ...rest,
             conversationId,
             parentMessageId: this.parentMessageId,
             onConversationResponse: (response: any) => {
-                if(response.detail) {
-                    console.log('\n' + response.detail);
+                if(response.detail && onConversationResponse) {
+                    return onConversationResponse(response);
                 }
                 if (response.conversation_id) {
                     this.conversationId = response.conversation_id

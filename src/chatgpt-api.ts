@@ -4,9 +4,11 @@ import * as types from './types';
 
 import { ChatGPTConversation } from './chatgpt-conversation'
 import {Axios, AxiosRequestConfig, AxiosResponse} from "axios";
+import {CF_CLEARANCE, SESSION_TOKEN_COOKIE} from "./browser-commands/constants";
+import {currentUserAgent} from "./app";
 
 const KEY_ACCESS_TOKEN = 'accessToken'
-const USER_AGENT = 'Chrome'
+const USER_AGENT = currentUserAgent;
 
 
 interface RefreshAccessTokenResponse {
@@ -155,61 +157,55 @@ export class ChatGPTAPI {
             'Content-Type': 'application/json',
             Cookie: `cf_clearance=${this._clearanceToken}`
         }
-        return this.backendClient.request({
+        const res = await this.backendClient.request({
             url: '/conversation',
             method: 'POST',
             headers,
             data: JSON.stringify(body)
-        }).then(res => {
-            try {
-                let index = -2;
-                let parsedData: types.ConversationResponseEvent;
-                const parse = () => {
-                    try {
-                        parsedData = JSON.parse(res.data.split('data: ').slice(index)[0]);
-                    } catch(e) {
-                        if(Math.abs(index) < res.data.length) {
-                            index--;
-                            parse();
-                        }
+        });
+
+        try {
+            let index = -2;
+            let parsedData: types.ConversationResponseEvent;
+            const parse = () => {
+                try {
+                    parsedData = JSON.parse(res.data.split('data: ').slice(index)[0]);
+                } catch (e) {
+                    if (Math.abs(index) < res.data.length) {
+                        index--;
+                        parse();
                     }
                 }
-                parse();
-                if (onConversationResponse) {
-                    onConversationResponse(parsedData)
-                }
-
-                const message = parsedData.message
-                if (message) {
-                    let text = message?.content?.parts?.[0]
-
-                    if (text) {
-                        response = text
-
-                        if (onProgress) {
-                            onProgress(text)
-                        }
-                    }
-                }
-                return response;
-            } catch (err) {
-                console.warn('error parsing message', res.data, err);
-                throw (err);
             }
-        }).catch((err) => {
-            console.log(err);
+            parse();
+            if(!parsedData) {
+                parsedData = JSON.parse(res.data);
+            }
+            const message = parsedData.message;
+            if (message) {
+                let text = message?.content?.parts?.[0]
+                if (text) {
+                    response = text
+                }
+            }else if((parsedData as any).detail) {
+                response = (parsedData as any).detail;
+            }else {
+               response = 'Empty response';
+            }
+            return response;
+        } catch (err) {
+            console.warn('error parsing message', res.data, err);
             const errMessageL = err.toString().toLowerCase()
 
             if (
                 response &&
-                (errMessageL === 'error: typeerror: terminated' ||
-                    errMessageL === 'typeerror: terminated')
+                (errMessageL === 'error: typeerror: terminated' || errMessageL === 'typeerror: terminated')
             ) {
                 return response
             } else {
                 return err
             }
-        })
+        }
     }
 
     async messageReturnHandler(data: any) {
@@ -234,7 +230,7 @@ export class ChatGPTAPI {
             const url = `/auth/session`
             const headers: any = {
                 ...this._headers,
-                cookie: `cf_clearance=${this._clearanceToken}; __Secure-next-auth.session-token=${this._sessionToken}`,
+                cookie: `${CF_CLEARANCE}=${this._clearanceToken}; ${SESSION_TOKEN_COOKIE}=${this._sessionToken}`,
                 accept: '*/*'
             }
 
@@ -308,11 +304,7 @@ export class ChatGPTAPI {
             headers
         }
         const sessions = JSON.parse((await this.backendClient.request(conversationsParams)).data).items;
-        if(sessions.length > 0) {
-            result.push(...sessions);
-            offset += 50;
-            return this.getConversations(result, offset);
-        }
+        result.push(...(sessions ?? []));
         return result;
     }
 

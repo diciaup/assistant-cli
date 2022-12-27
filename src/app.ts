@@ -1,4 +1,5 @@
 import { ChatGPTAPI } from './chatgpt-api';
+import {ALTERNATIVE_USER_AGENT, USER_AGENT} from "./browser-commands/constants";
 const { execSync } = require('child_process');
 const electronPath = require("electron");
 const fs = require('fs');
@@ -12,9 +13,10 @@ loadingSpinner.setSpinnerString('|/-\\');
 const localStorageLocation = `${__dirname}/../localStorage`;
 
 let authTry = 0;
-const getToken = (clearCache) => {
-  const path = `${__dirname}/fetch-token.js`;
-  const message = execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{CLEAR_CACHE: clearCache, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
+
+const runSandbox = (route: string) => {
+  const path = `${__dirname}/browser-commands/execute-browser.js`;
+  const message = execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
   if(message.length > 1) {
     try {
         const token = JSON.parse(message[1]);
@@ -35,18 +37,18 @@ const getClient = async () => {
     tokens = JSON.parse(fs.readFileSync(localStorageLocation).toString());
   } catch(e) {}
   if(!(tokens && tokens.token && tokens.clearanceToken)) {
-    tokens = getToken(false);
+    tokens = runSandbox('GET_SESSION_TOKEN');
     return getClient();
   }
   const api = new ChatGPTAPI({
     sessionToken: tokens.token,
     clearanceToken: tokens.clearanceToken,
     debug: process.env.ENV === 'dev',
-    userAgent: 'Chrome'
+    userAgent: currentUserAgent
   });
   const authenticated = await api.getIsAuthenticated();
   if (authenticated.type !== 'code') {
-    tokens = getToken(false);
+    tokens = runSandbox('GET_SESSION_TOKEN');
     authTry++;
     if(authTry === 3) {
       throw new Error("Authentication error, there is an error integrating with ChatGPT Service");
@@ -82,7 +84,7 @@ const startConversation = (conversationApi) => {
 }
 
 const resetAuth = () => {
-  getToken(true);
+  runSandbox('CLEAN');
   if(fs.existsSync(localStorageLocation)) {
     fs.rmSync(localStorageLocation);
   }
@@ -109,6 +111,17 @@ const unnecessaryClientCommand = {
 };
 
 
+export let currentUserAgent = USER_AGENT;
+
+export const toggleUserAgent = () => {
+  if(currentUserAgent === ALTERNATIVE_USER_AGENT) {
+    currentUserAgent = USER_AGENT;
+  }else {
+    currentUserAgent = ALTERNATIVE_USER_AGENT;
+  }
+}
+
+
 (async () => {
   if(parseInt(process.versions.node.split(".")[0], 10) < 16) {
     console.error('You are using a node version earlier than 16, please update it and retry');
@@ -127,7 +140,11 @@ const unnecessaryClientCommand = {
     def(conversation);
   }else {
     loadingSpinner.start();
-    const response = await conversation.sendMessage(args.join(' '));
+    let response = await conversation.sendMessage(args.join(' '));
+    if(response.startsWith('Too many requests in 1 hour.')) {
+      toggleUserAgent();
+      response = await conversation.sendMessage(args.join(' '));
+    }
     loadingSpinner.stop(true);
     console.log(cliMd(response));
   }

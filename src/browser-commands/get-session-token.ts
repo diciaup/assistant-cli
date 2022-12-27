@@ -1,37 +1,35 @@
 import {ChatGPTAPI} from "../chatgpt-api";
-import {AxiosRequestConfig, AxiosResponse} from "axios";
+import {AxiosRequestConfig} from "axios";
 import {app, BrowserWindow} from 'electron';
+import {CF_CLEARANCE, CHAT_GPT_DOMAIN, SESSION_TOKEN_COOKIE} from "./constants";
+import {getAccessToken} from "./get-access-token";
+import {currentUserAgent} from "../app";
 
 
 export const getSessionToken = async () => {
     const win = new BrowserWindow({width: 799, height: 600});
-    win.loadURL('https://chat.openai.com/chat', {userAgent: 'Chrome'});
+    win.loadURL(CHAT_GPT_DOMAIN, {userAgent: currentUserAgent});
     win.webContents.on('did-finish-load', () => {
-        checkTokens(win);
+        let code = `!!(document.querySelector('meta[content="ChatGPT"]'));`;
+        win.webContents.executeJavaScript(code).then(executionResult => {
+            console.log('execution re', executionResult);
+            if(executionResult) {
+                checkTokens(win);
+            }
+        }).catch(e => console.error('custom error', e));
     });
 }
 
 const checkTokens = async (win: BrowserWindow) => {
     const cookies = await win.webContents.session.cookies.get({});
-    let code = `const elements = document.getElementsByTagName('pre');
-    if(elements.length > 0) {
-        elements.item(0).innerHTML;
-    }`;
-    const executionResult = await win.webContents.executeJavaScript(code);
     try {
-        const token = cookies.filter((cookie) => cookie.name === '__Secure-next-auth.session-token')[0].value;
-        const clearanceToken = cookies.filter((cookie) => cookie.name === 'cf_clearance')[0].value;
+        const token = cookies.filter((cookie) => cookie.name === SESSION_TOKEN_COOKIE)[0].value;
+        const clearanceToken = cookies.filter((cookie) => cookie.name === CF_CLEARANCE)[0].value;
         const api = new ChatGPTAPI({
             sessionToken: token,
             clearanceToken,
-            userAgent: 'Chrome'
+            userAgent: currentUserAgent
         });
-        if(executionResult) {
-            try {
-                const parsedExecutionResult = JSON.parse(executionResult);
-                api.accessToken = parsedExecutionResult.accessToken;
-            }catch(e) {}
-        }
 
         const authenticated = await api.getIsAuthenticated();
         if(authenticated.type === 'code') {
@@ -40,19 +38,11 @@ const checkTokens = async (win: BrowserWindow) => {
         }
         if(authenticated.type === 'page') {
             const request = authenticated.content as AxiosRequestConfig;
-            let extraHeaders = '';
-            Object.keys(request.headers).forEach(hKey => {
-                extraHeaders += `${hKey}=${request.headers[hKey]}`;
-            })
-            await win.loadURL(request.url, {userAgent: 'Chrome', extraHeaders});
+            await getAccessToken(request);
         }
     } catch(e) {
         console.error('error during check tokens', e);
+    }finally {
+        app.exit();
     }
 }
-
-app.on('ready', getSessionToken);
-
-app.on('window-all-closed', () => {
-  app.quit()
-})
