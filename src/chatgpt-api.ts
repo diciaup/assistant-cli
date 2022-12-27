@@ -65,6 +65,7 @@ export class ChatGPTAPI {
             'user-agent': this._userAgent,
             'x-openai-assistant-app-id': '',
             'accept-language': 'en-US,en;q=0.9',
+            "Accept-Encoding": "gzip,deflate,compress",
             origin: 'https://chat.openai.com',
             referer: 'https://chat.openai.com/chat',
             'sec-ch-ua':
@@ -149,12 +150,11 @@ export class ChatGPTAPI {
         let response = ''
         const headers: any = {
             ...this._headers,
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken.content}`,
             Accept: 'text/event-stream',
             'Content-Type': 'application/json',
             Cookie: `cf_clearance=${this._clearanceToken}`
         }
-
         return this.backendClient.request({
             url: '/conversation',
             method: 'POST',
@@ -197,6 +197,7 @@ export class ChatGPTAPI {
                 throw (err);
             }
         }).catch((err) => {
+            console.log(err);
             const errMessageL = err.toString().toLowerCase()
 
             if (
@@ -204,10 +205,6 @@ export class ChatGPTAPI {
                 (errMessageL === 'error: typeerror: terminated' ||
                     errMessageL === 'typeerror: terminated')
             ) {
-                // OpenAI sometimes forcefully terminates the socket from their end before
-                // the HTTP request has resolved cleanly. In my testing, these cases tend to
-                // happen when OpenAI has already send the last `response`, so we can ignore
-                // the `fetch` error in this case.
                 return response
             } else {
                 return err
@@ -278,8 +275,9 @@ export class ChatGPTAPI {
             }
 
             this._accessTokenCache.set(KEY_ACCESS_TOKEN, accessToken)
-            return accessToken
+            return {type: 'code', content: accessToken}
         } catch (err: any) {
+            console.log(err);
             if (this._debug) {
                 console.error(err)
             }
@@ -288,6 +286,53 @@ export class ChatGPTAPI {
                 `ChatGPT failed to refresh auth token. ${err.toString()}`
             )
         }
+    }
+
+    async getConversations(result = [], offset: number = 0): Promise<{id: string, title: string}[]> {
+        const accessToken = await this.refreshAccessToken();
+        const headers: any = {
+            ...this._headers,
+            Authorization: `Bearer ${accessToken.content}`,
+            Accept: 'text/event-stream',
+            'Content-Type': 'application/json',
+            Cookie: `cf_clearance=${this._clearanceToken}`
+        }
+        const url = `/conversations`;
+        const conversationsParams: AxiosRequestConfig = {
+            url,
+            method: 'get',
+            params: {
+                offset,
+                limit: 50
+            },
+            headers
+        }
+        const sessions = JSON.parse((await this.backendClient.request(conversationsParams)).data).items;
+        if(sessions.length > 0) {
+            result.push(...sessions);
+            offset += 50;
+            return this.getConversations(result, offset);
+        }
+        return result;
+    }
+
+    async changeConversationName(id: string, title: string) {
+        const accessToken = await this.refreshAccessToken();
+        const headers: any = {
+            ...this._headers,
+            Authorization: `Bearer ${accessToken.content}`,
+            Accept: 'text/event-stream',
+            'Content-Type': 'application/json',
+            Cookie: `cf_clearance=${this._clearanceToken}`
+        }
+        const url = `/conversation/${id}`;
+        const conversationsParams: AxiosRequestConfig = {
+            url,
+            method: 'patch',
+            headers,
+            data: JSON.stringify({title})
+        }
+        return this.backendClient.request(conversationsParams);
     }
 
     getConversation(

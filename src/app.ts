@@ -45,15 +45,14 @@ const getClient = async () => {
     userAgent: 'Chrome'
   });
   const authenticated = await api.getIsAuthenticated();
-  console.log('auth', authenticated);
-  /*if (authenticated.type !== 'code') {
+  if (authenticated.type !== 'code') {
     tokens = getToken(false);
     authTry++;
     if(authTry === 3) {
       throw new Error("Authentication error, there is an error integrating with ChatGPT Service");
     }
     return getClient();
-  }*/
+  }
   return api;
 
 }
@@ -71,7 +70,7 @@ const useConversation = (conversationApi, rl, answer = "Hello how can i help you
       useConversation(conversationApi, rl, 'Please write a message');
     }
   })
-  };
+};
 
 const startConversation = (conversationApi) => {
   const rl = readline.createInterface({
@@ -122,12 +121,13 @@ const unnecessaryClientCommand = {
     return;
   }
   const api = await getClient();
+  const conversation = api.getConversation();
   const def = commands[args.join(' ')];
   if(def) {
-    def(api.getConversation());
+    def(conversation);
   }else {
     loadingSpinner.start();
-    const response = await api.sendMessage(args.join(' '));
+    const response = await conversation.sendMessage(args.join(' '));
     loadingSpinner.stop(true);
     console.log(cliMd(response));
   }
