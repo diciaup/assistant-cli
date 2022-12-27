@@ -283,7 +283,7 @@ export class ChatGPTAPI {
             if (this._debug) {
                 console.error(err)
             }
-
+            console.log(err);
             throw new types.ChatGPTError(
                 `ChatGPT failed to refresh auth token. ${err.toString()}`
             )

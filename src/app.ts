@@ -90,6 +90,11 @@ const resetAuth = () => {
   console.log('Cache cleaned!');
 }
 
+const getVersion = () => {
+  const version = JSON.parse(fs.readFileSync(`${__dirname}/../package.json`).toString()).version;
+  console.log(version);
+}
+
 const commands = {
   'open chat': startConversation,
   'start conversation': startConversation,
@@ -100,6 +105,7 @@ const commands = {
 const unnecessaryClientCommand = {
   'reset auth': resetAuth,
   'clear session': resetAuth,
+  'version': getVersion,
   'clean': resetAuth
 };
 
