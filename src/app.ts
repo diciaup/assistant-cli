@@ -1,5 +1,6 @@
 import { ChatGPTAPI } from './chatgpt-api';
 import {ALTERNATIVE_USER_AGENT, USER_AGENT} from "./browser-commands/constants";
+import { routes } from './browser-commands/execute-browser';
 const { execSync } = require('child_process');
 const electronPath = require("electron");
 const fs = require('fs');
@@ -14,21 +15,27 @@ const localStorageLocation = `${__dirname}/../localStorage`;
 
 let authTry = 0;
 
-const runSandbox = (route: string) => {
+export const runSandbox = (route: string) => {
   const path = `${__dirname}/browser-commands/execute-browser.js`;
-  const message = execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
-  if(message.length > 1) {
-    try {
-        const token = JSON.parse(message[1]);
-        if(token) {
-          fs.writeFileSync(localStorageLocation, JSON.stringify(token));
-          return token;
+  console.log(route, electronPath.shell.openPath());
+  if(typeof electronPath === 'object') {
+    routes[route]();
+  }else {
+    const message = execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
+    if(message.length > 1) {
+      try {
+          const token = JSON.parse(message[1]);
+          if(token) {
+            fs.writeFileSync(localStorageLocation, JSON.stringify(token));
+            return token;
+          }
+        } catch(e) {
+          console.log('original message', message.toString());
+          throw e;
         }
-      } catch(e) {
-        console.log('original message', message.toString());
-        throw e;
-      }
+    }
   }
+  
 }
 
 const getClient = async () => {

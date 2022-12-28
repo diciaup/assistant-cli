@@ -12,7 +12,6 @@ export const getSessionToken = async () => {
     win.webContents.on('did-finish-load', () => {
         let code = `!!(document.querySelector('meta[content="ChatGPT"]'));`;
         win.webContents.executeJavaScript(code).then(executionResult => {
-            console.log('execution re', executionResult);
             if(executionResult) {
                 checkTokens(win);
             }

@@ -5,7 +5,7 @@ import * as types from './types';
 import { ChatGPTConversation } from './chatgpt-conversation'
 import {Axios, AxiosRequestConfig, AxiosResponse} from "axios";
 import {CF_CLEARANCE, SESSION_TOKEN_COOKIE} from "./browser-commands/constants";
-import {currentUserAgent} from "./app";
+import {currentUserAgent, runSandbox} from "./app";
 
 const KEY_ACCESS_TOKEN = 'accessToken'
 const USER_AGENT = currentUserAgent;
@@ -260,7 +260,8 @@ export class ChatGPTAPI {
             const appError = res?.error
             if (appError) {
                 if (appError === 'RefreshAccessTokenError') {
-                    throw new types.ChatGPTError('session token may have expired')
+                    await runSandbox('CLEAN');
+                    return this.refreshAccessToken();
                 } else {
                     throw new types.ChatGPTError(appError)
                 }
