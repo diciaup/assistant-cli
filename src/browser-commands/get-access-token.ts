@@ -1,7 +1,7 @@
 import {app, BrowserWindow} from "electron";
 import {ChatGPTAPI} from "../chatgpt-api";
 import {CF_CLEARANCE, SESSION_TOKEN_COOKIE} from "./constants";
-import {currentUserAgent} from "../app";
+import { currentUserAgent } from "./toggle-user-agent";
 
 export const getAccessToken = async (extraHeaders: any) => {
     let headers = '';

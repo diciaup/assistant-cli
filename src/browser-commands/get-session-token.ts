@@ -3,7 +3,7 @@ import {AxiosRequestConfig} from "axios";
 import {app, BrowserWindow} from 'electron';
 import {CF_CLEARANCE, CHAT_GPT_DOMAIN, SESSION_TOKEN_COOKIE} from "./constants";
 import {getAccessToken} from "./get-access-token";
-import {currentUserAgent} from "../app";
+import { currentUserAgent } from "./toggle-user-agent";
 
 
 export const getSessionToken = async () => {
@@ -39,9 +39,8 @@ const checkTokens = async (win: BrowserWindow) => {
             const request = authenticated.content as AxiosRequestConfig;
             await getAccessToken(request);
         }
+        app.exit();
     } catch(e) {
         console.error('error during check tokens', e);
-    }finally {
-        app.exit();
     }
 }

@@ -5,7 +5,8 @@ import * as types from './types';
 import { ChatGPTConversation } from './chatgpt-conversation'
 import {Axios, AxiosRequestConfig, AxiosResponse} from "axios";
 import {CF_CLEARANCE, SESSION_TOKEN_COOKIE} from "./browser-commands/constants";
-import {currentUserAgent, runSandbox} from "./app";
+import { currentUserAgent } from './browser-commands/toggle-user-agent';
+import { resetAuth } from './core';
 
 const KEY_ACCESS_TOKEN = 'accessToken'
 const USER_AGENT = currentUserAgent;
@@ -157,6 +158,7 @@ export class ChatGPTAPI {
             'Content-Type': 'application/json',
             Cookie: `cf_clearance=${this._clearanceToken}`
         }
+        console.log('HEADERS', headers);
         const res = await this.backendClient.request({
             url: '/conversation',
             method: 'POST',
@@ -260,7 +262,7 @@ export class ChatGPTAPI {
             const appError = res?.error
             if (appError) {
                 if (appError === 'RefreshAccessTokenError') {
-                    await runSandbox('CLEAN');
+                    await resetAuth();
                     return this.refreshAccessToken();
                 } else {
                     throw new types.ChatGPTError(appError)
