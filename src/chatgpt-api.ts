@@ -122,9 +122,7 @@ export class ChatGPTAPI {
             conversationId,
             parentMessageId = uuidv4(),
             messageId = uuidv4(),
-            action = 'next',
-            onProgress,
-            onConversationResponse
+            action = 'next'
         } = opts
 
 
@@ -158,13 +156,19 @@ export class ChatGPTAPI {
             'Content-Type': 'application/json',
             Cookie: `cf_clearance=${this._clearanceToken}`
         }
-        console.log('HEADERS', headers);
         const res = await this.backendClient.request({
             url: '/conversation',
             method: 'POST',
             headers,
             data: JSON.stringify(body)
         });
+        console.log('PARAMETERS', {
+            url: '/conversation',
+            method: 'POST',
+            headers,
+            data: JSON.stringify(body)
+        });
+
 
         try {
             let index = -2;
@@ -210,15 +214,8 @@ export class ChatGPTAPI {
         }
     }
 
-    async messageReturnHandler(data: any) {
-    }
-
     async getIsAuthenticated(): Promise<RefreshAccessTokenResponse> {
         return this.refreshAccessToken();
-    }
-
-    async ensureAuth() {
-        return await this.refreshAccessToken()
     }
 
     async refreshAccessToken(): Promise<RefreshAccessTokenResponse> {
@@ -254,7 +251,6 @@ export class ChatGPTAPI {
             }
             const res = JSON.parse(sessionRes.data);
             const accessToken = res?.accessToken
-
             if (!accessToken) {
                 throw new types.ChatGPTError('Unauthorized');
             }

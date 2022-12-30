@@ -13,7 +13,8 @@
     "publish": "tsc && npm publish",
     "start": "node .",
     "build": "tsc",
-    "get-token": "tsc && ENV=dev ROUTE=GET_SESSION_TOKEN electron ./dist/browser-commands/execute-browser.js"
+    "get-token": "tsc && ENV=dev ROUTE=GET_SESSION_TOKEN electron ./dist/browser-commands/execute-browser.js",
+    "clean": "tsc && ENV=dev ROUTE=CLEAN electron ./dist/browser-commands/execute-browser.js"
   },
   "author": "Paolo Di Ciaula",
   "license": "MIT",

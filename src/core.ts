@@ -19,10 +19,8 @@ loadingSpinner.setSpinnerString('|/-\\');
 export const runSandbox = async (route: string) => {
   const path = `${__dirname}/browser-commands/execute-browser.js`;
   if(typeof electronPath === 'object') {
-    console.log('routes', routes);
     await routes[route]()
   }else {
-    console.log('launch command', `${electronPath} --no-logging ${path}`);
     const message = execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
     if(message.length > 1) {
       try {
@@ -37,7 +35,7 @@ export const runSandbox = async (route: string) => {
         }
     }
   }
-  
+
 }
 
 export const getClient = async () => {
@@ -94,10 +92,10 @@ const startConversation = (conversationApi) => {
 }
 
 export const resetAuth = async () => {
-  await runSandbox('CLEAN');
   if(fs.existsSync(localStorageLocation)) {
     fs.rmSync(localStorageLocation);
   }
+  await runSandbox('CLEAN');
   console.log('Cache cleaned!');
 }
 
