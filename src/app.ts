@@ -1,5 +1,5 @@
-import { toggleUserAgent } from './browser-commands/toggle-user-agent';
-import { commands, getClient, loadingSpinner, unnecessaryClientCommand } from './core';
+import { ChatGPTAPI } from './chatgpt-api';
+import { commands, loadingSpinner, unnecessaryClientCommand } from './core';
 const cliMd = require('cli-md');
 
 
@@ -14,7 +14,7 @@ const cliMd = require('cli-md');
     noClientDef();
     return;
   }
-  const api = await getClient();
+  const api = await ChatGPTAPI.getInstance();
   const conversation = api.getConversation();
   const def = commands[args.join(' ')];
   if(def) {
@@ -22,10 +22,6 @@ const cliMd = require('cli-md');
   }else {
     loadingSpinner.start();
     let response = await conversation.sendMessage(args.join(' '));
-    if(response.startsWith('Too many requests in 1 hour.')) {
-      toggleUserAgent();
-      response = await conversation.sendMessage(args.join(' '));
-    }
     loadingSpinner.stop(true);
     console.log(cliMd(response));
   }

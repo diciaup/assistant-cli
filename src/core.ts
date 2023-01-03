@@ -1,3 +1,4 @@
+import type { Cookie } from "electron";
 import { localStorageLocation } from "./browser-commands/constants";
 import routes from "./browser-commands/routes";
 import { currentUserAgent } from "./browser-commands/toggle-user-agent";
@@ -16,54 +17,14 @@ let authTry = 0;
 export const loadingSpinner = new Spinner('processing... %s');
 loadingSpinner.setSpinnerString('|/-\\');
 
-export const runSandbox = async (route: string) => {
+export const runSandbox = async (route: string, ...args: any[]): Promise<any> => {
   const path = `${__dirname}/browser-commands/execute-browser.js`;
   if(typeof electronPath === 'object') {
-    await routes[route]()
+    return routes[route].response(await routes[route].request(args));
   }else {
     const message = execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
-    if(message.length > 1) {
-      try {
-          const token = JSON.parse(message[1]);
-          if(token) {
-            fs.writeFileSync(localStorageLocation, JSON.stringify(token));
-            return token;
-          }
-        } catch(e) {
-          console.log('original message', message.toString());
-          throw e;
-        }
-    }
+    return routes[route].response(message);
   }
-
-}
-
-export const getClient = async () => {
-  let tokens;
-
-  try {
-    tokens = JSON.parse(fs.readFileSync(localStorageLocation).toString());
-  } catch(e) {}
-  if(!(tokens && tokens.token && tokens.clearanceToken)) {
-    tokens = await runSandbox('GET_SESSION_TOKEN');
-    return getClient();
-  }
-  const api = new ChatGPTAPI({
-    sessionToken: tokens.token,
-    clearanceToken: tokens.clearanceToken,
-    debug: process.env.ENV === 'dev',
-    userAgent: currentUserAgent
-  });
-  const authenticated = await api.getIsAuthenticated();
-  if (authenticated.type !== 'code') {
-    tokens = await runSandbox('GET_SESSION_TOKEN');
-    authTry++;
-    if(authTry === 3) {
-      throw new Error("Authentication error, there is an error integrating with ChatGPT Service");
-    }
-    return getClient();
-  }
-  return api;
 
 }
 

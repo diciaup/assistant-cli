@@ -27,7 +27,7 @@ export class ChatGPTConversation {
                 await this.api.changeConversationName(allConversations[0].id, 'CLI');
             }
         }
-        const conversationId = conversations.length > 0 ? conversations[0].id : undefined;
+        let conversationId = conversations.length > 0 ? conversations[0].id : undefined;
         return this.api.sendMessage(message, {
             ...rest,
             conversationId,

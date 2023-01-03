@@ -1,12 +1,10 @@
 import {ChatGPTAPI} from "../chatgpt-api";
-import {AxiosRequestConfig} from "axios";
 import {app, BrowserWindow} from 'electron';
-import {CF_CLEARANCE, CHAT_GPT_DOMAIN, SESSION_TOKEN_COOKIE} from "./constants";
+import { CHAT_GPT_DOMAIN } from "./constants";
 import {getAccessToken} from "./get-access-token";
 import { currentUserAgent, setUserAgent } from "./toggle-user-agent";
 
-
-export const getSessionToken = async () => {
+export const getCookies = async () => {
     const win = new BrowserWindow({width: 799, height: 600});
     win.loadURL(CHAT_GPT_DOMAIN);
     win.webContents.on('did-finish-load', () => {
@@ -14,30 +12,26 @@ export const getSessionToken = async () => {
         let code = `!!(document.querySelector('meta[content="ChatGPT"]'));`;
         win.webContents.executeJavaScript(code).then(executionResult => {
             if(executionResult) {
-                checkTokens(win);
+                extractCookies(win);
             }
         }).catch(e => console.error('custom error', e));
     });
 }
 
-const checkTokens = async (win: BrowserWindow) => {
+const extractCookies = async (win: BrowserWindow) => {
     const cookies = await win.webContents.session.cookies.get({});
     try {
-        const token = cookies.filter((cookie) => cookie.name === SESSION_TOKEN_COOKIE)[0].value;
-        const clearanceToken = cookies.filter((cookie) => cookie.name === CF_CLEARANCE)[0].value;
         const api = await ChatGPTAPI.getInstance({
-            cookies,
+            cookies, 
             userAgent: currentUserAgent
         });
 
         const authenticated = await api.getIsAuthenticated();
         if(authenticated.type === 'code') {
-            process.stdout.write('data: ' + JSON.stringify({token, clearanceToken}));
+            process.stdout.write('data: ' + JSON.stringify(cookies));
             win.close();
-        }
-        if(authenticated.type === 'page') {
-            const request = authenticated.content as AxiosRequestConfig;
-            await getAccessToken(request);
+        }else {
+            getAccessToken(authenticated.content.headers);
         }
         app.exit();
     } catch(e) {
