@@ -22,7 +22,7 @@ export const runSandbox = async (route: string, ...args: any[]): Promise<any> =>
   if(typeof electronPath === 'object') {
     return routes[route].response(await routes[route].request(args));
   }else {
-    const message = execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString().split('data: ');
+    const message = JSON.parse(execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString()).return;
     return routes[route].response(message);
   }
 

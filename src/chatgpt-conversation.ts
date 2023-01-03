@@ -20,14 +20,15 @@ export class ChatGPTConversation {
         opts: types.SendConversationMessageOptions = {}
     ): Promise<string> {
         const { onConversationResponse, ...rest } = opts
-        const allConversations = await this.api.getConversations();
+        /*const allConversations = await this.api.getConversations();
         const conversations = allConversations.filter(item => item.title === 'CLI');
         if(conversations.length === 0) {
             if(allConversations.length > 0) {
                 await this.api.changeConversationName(allConversations[0].id, 'CLI');
             }
         }
-        let conversationId = conversations.length > 0 ? conversations[0].id : undefined;
+        let conversationId = conversations.length > 0 ? conversations[0].id : undefined;*/
+        let conversationId = undefined;
         return this.api.sendMessage(message, {
             ...rest,
             conversationId,

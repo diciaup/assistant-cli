@@ -30,7 +30,7 @@ const checkTokens = async (win: BrowserWindow) => {
             userAgent: currentUserAgent
         });
 
-        const authenticated = await api.getIsAuthenticated();
+        /*const authenticated = await api.getIsAuthenticated();
         if(authenticated.type === 'code') {
             process.stdout.write('data: ' + JSON.stringify({token, clearanceToken}));
             win.close();
@@ -38,7 +38,7 @@ const checkTokens = async (win: BrowserWindow) => {
         if(authenticated.type === 'page') {
             const request = authenticated.content as AxiosRequestConfig;
             await getAccessToken(request);
-        }
+        }*/
         app.exit();
     } catch(e) {
         console.error('error during check tokens', e);

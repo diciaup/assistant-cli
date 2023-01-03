@@ -71,10 +71,6 @@ export class ChatGPTAPI {
         } = opts
         this.apiClient = new Axios({baseURL: apiBaseUrl});
         this.backendClient = new Axios({baseURL: backendApiBaseUrl});
-        this.apiClient.interceptors.response.use((response) => this.responseInterceptor(response));
-        this.backendClient.interceptors.response.use((response) => this.responseInterceptor(response));
-        this.apiClient.interceptors.request.use((request) => this.requestOrder(request));
-        this.backendClient.interceptors.request.use((request) => this.requestOrder(request));
 
         this._cookies = cookies
         this._markdown = !!markdown
@@ -121,46 +117,9 @@ export class ChatGPTAPI {
         debug?: boolean
     }) {
         if(!this._instance) {
-            if(!opts?.cookies) {
-                opts.cookies = await runSandbox('GET_COOKIES');
-            }
             this._instance = new ChatGPTAPI(opts);
         }
         return this._instance;
-    }
-
-    async responseInterceptor(response: AxiosResponse) {
-        if(response.status === 200) {
-            const setCookies = response.headers['set-cookie'] ?? [];
-            for(const cookie of setCookies) {
-                const cookieToSet = cookie.split(';')[0];
-                const name = cookieToSet.split('=')[0];
-                const value = cookieToSet.split('=')[1];
-
-                if(cookieToSet.length > 0) {
-                    const index = this._cookies.findIndex(item => item.name === name);
-                    if(index > -1) {
-                        this._cookies[index] = {name, value, sameSite: 'unspecified'};
-                    }else {
-                        this._cookies.push({name, value, sameSite: 'unspecified'});
-                    }
-                }
-            }
-            fs.writeFileSync(localStorageLocation, JSON.stringify(this._cookies));
-        }        
-        return response;
-    }
-
-    requestOrder(request: AxiosRequestConfig<any>) {
-        const sortedKeys = Object.keys(request.headers).sort();
-        const sortedObject = {};
-
-        sortedKeys.forEach(key => {
-            sortedObject[key] = request.headers[key];
-        });
-        request.headers = sortedObject;
-        console.log('REQUEST', request);
-        return request;
     }
 
     get user() {
@@ -169,6 +128,10 @@ export class ChatGPTAPI {
 
     get cookies() {
         return this._cookies;
+    }
+
+    set cookies(cookies: Cookie[]) {
+        this._cookies = cookies;
     }
 
     get sessionToken() {
@@ -199,8 +162,6 @@ export class ChatGPTAPI {
         } = opts
 
 
-        const accessToken = await this.refreshAccessToken()
-
         const body: types.ConversationJSONBody = {
             action,
             messages: [
@@ -226,7 +187,7 @@ export class ChatGPTAPI {
         let response = ''
         const headers: any = {
             ...this._headers,
-            Authorization: `Bearer ${accessToken.content}`,
+            Authorization: `Bearer ${this._accessTokenCache.get(KEY_ACCESS_TOKEN)}`,
             Accept: 'text/event-stream',
             'Content-Type': 'application/json',
             Cookie: listToCookieString(this.cookies)
@@ -283,73 +244,10 @@ export class ChatGPTAPI {
         }
     }
 
-    async getIsAuthenticated(): Promise<RefreshAccessTokenResponse> {
-        return this.refreshAccessToken();
-    }
-
-    async refreshAccessToken(): Promise<RefreshAccessTokenResponse> {
-        const cachedAccessToken = this._accessTokenCache.get(KEY_ACCESS_TOKEN)
-        if (cachedAccessToken) {
-            return {type: 'code', content: cachedAccessToken}
-        }
-
-        let response: AxiosResponse;
-        try {
-            const url = `/auth/session`
-            const headers: any = {
-                ...this._headers,
-                cookie: listToCookieString(this.cookies),
-                accept: '*/*'
-            }
-
-            if (this._debug) {
-                console.log('GET', url, headers)
-            }
-            const sessionResParams: AxiosRequestConfig = {
-                url,
-                method: 'get',
-                headers
-            }
-            const sessionRes = await this.apiClient.request(sessionResParams);
-            const res = JSON.parse(sessionRes.data);
-            const accessToken = res?.accessToken
-            if (!accessToken) {
-                throw new types.ChatGPTError('Unauthorized');
-            }
-
-            const appError = res?.error
-            if (appError) {
-                if (appError === 'RefreshAccessTokenError') {
-                    await resetAuth();
-                    return this.refreshAccessToken();
-                } else {
-                    throw new types.ChatGPTError(appError)
-                }
-            }
-
-            if (res.user) {
-                this._user = res.user
-            }
-
-            this._accessTokenCache.set(KEY_ACCESS_TOKEN, accessToken)
-            return {type: 'code', content: accessToken}
-        } catch (err: any) {
-            console.log(err);
-            if (this._debug) {
-                console.error(err)
-            }
-            console.log(err);
-            throw new types.ChatGPTError(
-                `ChatGPT failed to refresh auth token. ${err.toString()}`
-            )
-        }
-    }
-
     async getConversations(result = [], offset: number = 0): Promise<{id: string, title: string}[]> {
-        const accessToken = await this.refreshAccessToken();
         const headers: any = {
             ...this._headers,
-            Authorization: `Bearer ${accessToken.content}`,
+            Authorization: `Bearer ${this._accessTokenCache.get(KEY_ACCESS_TOKEN)}`,
             Accept: 'text/event-stream',
             'Content-Type': 'application/json',
             Cookie: listToCookieString(this.cookies)
@@ -364,16 +262,17 @@ export class ChatGPTAPI {
             },
             headers
         }
+        console.log('response', (await this.backendClient.request(conversationsParams)).data);
         const sessions = JSON.parse((await this.backendClient.request(conversationsParams)).data).items;
         result.push(...(sessions ?? []));
         return result;
     }
 
     async changeConversationName(id: string, title: string) {
-        const accessToken = await this.refreshAccessToken();
+        const accessToken = this._accessTokenCache.get(KEY_ACCESS_TOKEN);
         const headers: any = {
             ...this._headers,
-            Authorization: `Bearer ${accessToken.content}`,
+            Authorization: `Bearer ${accessToken}`,
             Accept: 'text/event-stream',
             'Content-Type': 'application/json',
             Cookie: listToCookieString(this.cookies)

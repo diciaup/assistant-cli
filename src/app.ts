@@ -1,5 +1,5 @@
 import { ChatGPTAPI } from './chatgpt-api';
-import { commands, loadingSpinner, unnecessaryClientCommand } from './core';
+import { commands, loadingSpinner, runSandbox, unnecessaryClientCommand } from './core';
 const cliMd = require('cli-md');
 
 
@@ -14,6 +14,7 @@ const cliMd = require('cli-md');
     noClientDef();
     return;
   }
+  await runSandbox('GET_COOKIES');
   const api = await ChatGPTAPI.getInstance();
   const conversation = api.getConversation();
   const def = commands[args.join(' ')];
