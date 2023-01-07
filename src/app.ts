@@ -1,4 +1,3 @@
-import { ChatGPTAPI } from './chatgpt-api';
 import { commands, loadingSpinner, runSandbox, unnecessaryClientCommand } from './core';
 const cliMd = require('cli-md');
 
@@ -14,16 +13,13 @@ const cliMd = require('cli-md');
     noClientDef();
     return;
   }
-  await runSandbox('GET_COOKIES');
-  const api = await ChatGPTAPI.getInstance();
-  const conversation = api.getConversation();
   const def = commands[args.join(' ')];
   if(def) {
-    def(conversation);
+    def();
   }else {
     loadingSpinner.start();
-    let response = await conversation.sendMessage(args.join(' '));
+    let response = await runSandbox('SEND_MESSAGE', args);
     loadingSpinner.stop(true);
-    console.log(cliMd(response));
+    console.log(cliMd(response || ''));
   }
 })().catch((err) => console.log(err));

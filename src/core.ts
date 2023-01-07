@@ -1,8 +1,5 @@
-import type { Cookie } from "electron";
 import { localStorageLocation } from "./browser-commands/constants";
 import routes from "./browser-commands/routes";
-import { currentUserAgent } from "./browser-commands/toggle-user-agent";
-import { ChatGPTAPI } from "./chatgpt-api";
 
 const Spinner = require('cli-spinner').Spinner;
 const { execSync } = require('child_process');
@@ -22,7 +19,8 @@ export const runSandbox = async (route: string, ...args: any[]): Promise<any> =>
   if(typeof electronPath === 'object') {
     return routes[route].response(await routes[route].request(args));
   }else {
-    const message = JSON.parse(execSync(`${electronPath} --no-logging ${path}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString()).return;
+    const result = execSync(`${electronPath} --no-logging ${path} ${args.join(' ')}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString();
+    const message = JSON.parse(result).return;
     return routes[route].response(message);
   }
 

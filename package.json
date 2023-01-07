@@ -15,6 +15,7 @@
     "build": "tsc",
     "get-token": "tsc && ENV=dev ROUTE=GET_SESSION_TOKEN electron ./dist/browser-commands/execute-browser.js",
     "get-cookies": "tsc && ENV=dev ROUTE=GET_COOKIES electron ./dist/browser-commands/execute-browser.js",
+    "send-message": "tsc && ENV=dev ROUTE=SEND_MESSAGE electron ./dist/browser-commands/execute-browser.js",
     "clean": "tsc && ENV=dev ROUTE=CLEAN electron ./dist/browser-commands/execute-browser.js"
   },
   "author": "Paolo Di Ciaula",
