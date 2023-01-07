@@ -15,10 +15,11 @@ Add the version of your AssistantCli
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+1. Launch command '...'
+2. See error
+3. Try to launch assistant clean
+4. Re-launch command '...'
+5. See error
 
 **Expected behavior**
 A clear and concise description of what you expected to happen.
@@ -27,7 +28,7 @@ A clear and concise description of what you expected to happen.
 If applicable, add screenshots to help explain your problem.
 
 **CLI (please complete the following information):**
- - OS: [e.g. iOS]
+ - OS: [e.g. MacOS]
  - OS Version [e.g. 22]
  - AssistantCli Version [e.g. 0.2.5]
 
