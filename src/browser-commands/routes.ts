@@ -14,7 +14,7 @@ const routes: {[key: string]: Route} = {
     SEND_MESSAGE: {
         request: sendMessage,
         response: async (response: any) => {
-            console.log(response);
+            return response;
         }
     }
 };

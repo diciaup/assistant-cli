@@ -1,5 +1,6 @@
 import { commands, loadingSpinner, runSandbox, unnecessaryClientCommand } from './core';
 const cliMd = require('cli-md');
+import { NodeHtmlMarkdown, NodeHtmlMarkdownOptions } from 'node-html-markdown'
 
 
 (async () => {
@@ -20,6 +21,6 @@ const cliMd = require('cli-md');
     loadingSpinner.start();
     let response = await runSandbox('SEND_MESSAGE', args);
     loadingSpinner.stop(true);
-    console.log(cliMd(response || ''));
+    console.log(cliMd(NodeHtmlMarkdown.translate(response || '')));
   }
 })().catch((err) => console.log(err));
