@@ -1,6 +1,6 @@
 {
   "name": "assistant-cli",
-  "version": "1.3.0",
+  "version": "1.3.2",
   "description": "A command line tool to easily integrate OpenAI Chat GPT service",
   "main": "./bin/cli",
   "engines": {
@@ -15,7 +15,7 @@
     "build": "tsc",
     "get-token": "tsc && ENV=dev ROUTE=GET_SESSION_TOKEN electron ./dist/browser-commands/execute-browser.js",
     "get-cookies": "tsc && ENV=dev ROUTE=GET_COOKIES electron ./dist/browser-commands/execute-browser.js",
-    "send-message": "tsc && ENV=dev ROUTE=SEND_MESSAGE electron ./dist/browser-commands/execute-browser.js",
+    "send-message": "tsc && ENV=dev ROUTE=SEND_MESSAGE electron ./dist/browser-commands/execute-browser.js padding",
     "clean": "tsc && ENV=dev ROUTE=CLEAN electron ./dist/browser-commands/execute-browser.js"
   },
   "author": "Paolo Di Ciaula",
@@ -50,7 +50,7 @@
     "bot"
   ],
   "devDependencies": {
-    "@types/node": "^18.11.14",
+    "@types/node": "^18.11.18",
     "typescript": "^4.9.4"
   }
 }

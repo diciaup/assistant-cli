@@ -2,14 +2,14 @@ import { localStorageLocation } from "./browser-commands/constants";
 import routes from "./browser-commands/routes";
 
 const Spinner = require('cli-spinner').Spinner;
-const { execSync } = require('child_process');
+import {spawn} from 'child_process';
 const electronPath = require("electron");
 const fs = require('fs');
 const readline = require('readline');
 const cliMd = require('cli-md');
 
-let authTry = 0;
 
+let authTry = 0;
 
 export const loadingSpinner = new Spinner('processing... %s');
 loadingSpinner.setSpinnerString('|/-\\');
@@ -19,9 +19,21 @@ export const runSandbox = async (route: string, ...args: any[]): Promise<any> =>
   if(typeof electronPath === 'object') {
     return routes[route].response(await routes[route].request(args));
   }else {
-    const result = execSync(`${electronPath} --no-logging ${path} ${args.join(' ')}`, { stdio: [], env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: 0}}}).toString();
-    const message = JSON.parse(result).return;
-    return routes[route].response(message);
+    return new Promise((resolve) => {
+      const opResult = spawn(electronPath, ['--no-logging', path, args.join(' ')], { env: {...process.env, ...{ROUTE: route, ELECTRON_ENABLE_LOGGING: '0' }}});
+      opResult.stdout.on('data', (data) => {
+        try {
+          const returnedValue = JSON.parse(data.toString()).return;
+          if(returnedValue === 'done') {
+            resolve(returnedValue);
+            return;
+          }
+          routes[route].response(returnedValue);
+        }catch(e) {
+          console.error(e, 'error:', data.toString());
+        }
+      })
+    })   
   }
 
 }

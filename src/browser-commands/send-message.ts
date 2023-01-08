@@ -2,19 +2,21 @@ import { CHAT_GPT_DOMAIN } from "./constants";
 import {BrowserWindow} from 'electron';
 import * as types from '../types';
 
-export const sendMessage = async (message: string): Promise<string> => {
-    const win = new BrowserWindow({width: 799, height: 600, show: false});
+export const sendMessage = async (message: string[]): Promise<string> => {
+    const win = new BrowserWindow({width: 799, height: 600, show: true});
     win.loadURL(CHAT_GPT_DOMAIN);
     return new Promise((resolve) => {
         win.webContents.on('did-finish-load', async () => {
-            let code = `!!(document.querySelector('meta[content="ChatGPT"]'));`;
+            let code = `(!!document.querySelector('meta[content="ChatGPT"]') && !!document.getElementsByTagName("textarea").item(0));`;
             const executionResult = await win.webContents.executeJavaScript(code);
             if(executionResult) {
-                resolve(await handleMainPage(win, message));
+                if(process.env.ENV !== 'dev') {
+                    win.hide();
+                }
+                resolve(await handleMainPage(win, message.join(' ')));
             }
         });
     })
-   
 };
 
 const handleMainPage = (win: BrowserWindow, message: string): Promise<string> => {
@@ -29,51 +31,24 @@ const handleMainPage = (win: BrowserWindow, message: string): Promise<string> =>
                     requestId = params.requestId;
                 }
             }
-            if(requestId && params.requestId === requestId && (method === 'Network.loadingFinished' || method === 'Network.loadingFailed')) {
-                let response;
+            if (requestId && params.requestId === requestId && method === 'Network.dataReceived') {
                 try {
-                    let responseContent = await win.webContents.debugger.sendCommand('Network.getResponseBody', { requestId });
-                    const res = responseContent.body;
-                    let index = -2;
-                    let parsedData: types.ConversationResponseEvent;
-                    const parse = () => {
-                        try {
-                            parsedData = JSON.parse(res.split('data: ').slice(index)[0]);
-                        } catch (e) {
-                            if (Math.abs(index) < res.length) {
-                                index--;
-                                parse();
-                            }
-                        }
-                    }
-                    parse();
-                    if(!parsedData) {
-                        parsedData = JSON.parse(res);
-                    }
-                    const message = parsedData.message;
-                    if (message) {
-                        let text = message?.content?.parts?.[0]
-                        if (text) {
-                            response = text
-                        }
-                    }else if((parsedData as any).detail) {
-                        response = (parsedData as any).detail;
-                    }else {
-                        response = 'Empty response';
-                    }
-                } catch(e) {
-                    response = await win.webContents.executeJavaScript(`
-                        const markdownList = document.getElementsByClassName('markdown');
-                        markdownList.item(markdownList.length - 1).innerHTML;
+                    const currentMessageContent = await win.webContents.executeJavaScript(`
+                        document.getElementsByClassName('markdown').item(document.getElementsByClassName('markdown').length - 1).innerHTML;
                     `);
+                    process.stdout.write(JSON.stringify({return: currentMessageContent}))
+
+                }catch(e) {
+                    console.error(e);
                 }
-                
-                process.stdout.write(JSON.stringify({return: response}))
-                resolve(response);
+            }
+            if(requestId && params.requestId === requestId && (method === 'Network.loadingFinished' || method === 'Network.loadingFailed')) {
+                process.stdout.write(JSON.stringify({return: 'done'}))
+                resolve('done');
                 win.close();
             }
         })
-        win.webContents.debugger.sendCommand('Network.enable'); 
+        win.webContents.debugger.sendCommand('Network.enable');
         win.webContents.executeJavaScript(`
             document.getElementsByTagName("textarea").item(0).value = "${message}";
             document.getElementsByTagName("textarea").item(0).nextElementSibling.click();
