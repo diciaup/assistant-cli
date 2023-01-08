@@ -1,9 +1,8 @@
 import { BrowserWindow } from "electron";
-import { currentUserAgent } from "./toggle-user-agent";
 
 export const clean = async () => {
     const win = new BrowserWindow({width: 799, height: 600});
-    win.loadURL('https://chat.openai.com/chat', {userAgent: currentUserAgent});
+    win.loadURL('https://chat.openai.com/chat');
     return new Promise((resolve, reject) => {
         win.webContents.on('did-finish-load', () => {
             let code = `!!document.querySelector('meta[content="ChatGPT"]');`;

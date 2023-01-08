@@ -38,28 +38,28 @@ export const runSandbox = async (route: string, ...args: any[]): Promise<any> =>
 
 }
 
-export const useConversation = (conversationApi, rl, answer = "Hello how can i help you?") => {
+export const useConversation = (rl, answer = "Hello how can i help you?") => {
   rl.question(`${cliMd('🤖 ' + answer)}> `, (request) => {
     if(request.length > 0) {
        loadingSpinner.start();
-       conversationApi.sendMessage(request).then(res => {
-        useConversation(conversationApi, rl, res);
+       runSandbox('SEND_MESSAGE', request).then(res => {
+        useConversation(rl, res);
       })
-      .catch(e => useConversation(conversationApi, rl, e))
+      .catch(e => useConversation(rl, e))
       .finally(() => loadingSpinner.stop(true));
     }else {
-      useConversation(conversationApi, rl, 'Please write a message');
+      useConversation(rl, 'Please write a message');
     }
   })
 };
 
-const startConversation = (conversationApi) => {
+const startConversation = () => {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
 
-  useConversation(conversationApi, rl);
+  useConversation(rl);
 }
 
 export const resetAuth = async () => {
