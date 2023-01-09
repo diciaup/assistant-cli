@@ -1,13 +1,16 @@
 import { commands, loadingSpinner, runSandbox, unnecessaryClientCommand } from './core';
-
-
+const os = require('os');
 
 (async () => {
   if(parseInt(process.versions.node.split(".")[0], 10) < 16) {
     console.error('You are using a node version earlier than 16, please update it and retry');
     return;
   }
-  const args = process.argv.slice(4);
+  let argumentIndex = 4;
+  if(os.platform() === 'win32') {
+    argumentIndex++;
+  }
+  const args = process.argv.slice(argumentIndex);
   const noClientDef = unnecessaryClientCommand[args.join(' ')];
   if(noClientDef) {
     noClientDef();
