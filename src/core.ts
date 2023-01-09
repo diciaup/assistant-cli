@@ -30,7 +30,9 @@ export const runSandbox = async (route: string, ...args: any[]): Promise<any> =>
           }
           routes[route].response(returnedValue);
         }catch(e) {
-          console.error(e, 'error:', data.toString());
+          if(process.env.ENV === 'dev') {
+            console.error(e, 'error:', data.toString());
+          }
         }
       })
     })   
