@@ -23,6 +23,12 @@ npm install -g assistant-cli
 > **Note**
 > Per the official OpenAI Discord on December 7th, 2022: The ChatGPT servers are currently experiencing "exceptionally high demand," so some requests may respond with [HTTP 503 errors](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503).
 
+### Check version:
+```bash
+assistant version
+```
+
+
 ### One spot question:
 ```bash
 assistant Provide me a React snippet
