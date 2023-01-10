@@ -3,6 +3,7 @@ import { sendMessage } from "./send-message";
 const cliMd = require('cli-md');
 import { NodeHtmlMarkdown } from 'node-html-markdown'
 import { getConversations } from "./show-conversations";
+import { loadingSpinner } from "../core";
 
 interface Route {
     request: (...args: any[]) => Promise<any>;
@@ -17,6 +18,7 @@ const routes: {[key: string]: Route} = {
     SEND_MESSAGE: {
         request: sendMessage,
         response: async (response: any) => {
+            loadingSpinner.stop(true);
             console.clear();
             console.log(cliMd(NodeHtmlMarkdown.translate(response || '')));
             return response;

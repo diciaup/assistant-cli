@@ -22,6 +22,5 @@ const os = require('os');
   }else {
     loadingSpinner.start();
     await runSandbox('SEND_MESSAGE', args);
-    loadingSpinner.stop(true);
   }
 })().catch((err) => console.log(err));

@@ -12,7 +12,6 @@ const cliMd = require('cli-md');
 let authTry = 0;
 
 export const loadingSpinner = new Spinner('processing... %s');
-loadingSpinner.setSpinnerString('|/-\\');
 
 export const runSandbox = async (route: string, ...args: any[]): Promise<any> => {
   const path = `${__dirname}/browser-commands/execute-browser.js`;

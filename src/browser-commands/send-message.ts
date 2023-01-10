@@ -1,6 +1,5 @@
 import { CHAT_GPT_DOMAIN } from "./constants";
 import {BrowserWindow} from 'electron';
-import * as types from '../types';
 
 export const sendMessage = async (message: string[]): Promise<string> => {
     const win = new BrowserWindow({width: 799, height: 600, show: true});
