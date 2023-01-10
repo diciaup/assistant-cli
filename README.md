@@ -1,3 +1,7 @@
+<p align="center">
+  <img alt="Example usage" src="/media/demo.gif">
+</p>
+
 # Assistant CLI <!-- omit in toc -->
 
 > CLI tool for [ChatGPT](https://openai.com/blog/chatgpt/) Service.
