@@ -23,7 +23,6 @@ const selectNextConversation = async (win: BrowserWindow, index = 0) => {
     console.log('selecting ', index);
     return new Promise(async (resolve) => {
         win.webContents.debugger.on('message', async (event, method, params) => {
-            console.log(event, method, params);
             if (method === 'Network.responseReceived') { 
                 const {response} = params;
                 const {url} = response;
